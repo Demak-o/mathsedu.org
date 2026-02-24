@@ -41,4 +41,36 @@ router.get("/leaderboard/:gameId", (req, res) => {
   return res.json({ gameId, top: scores });
 });
 
+router.get("/leaderboard-total", (_req, res) => {
+  const bestByUserGame = new Map();
+
+  db.gameScores.forEach((score) => {
+    const key = `${score.userId}:${score.gameId}`;
+    const existing = bestByUserGame.get(key);
+    if (!existing || score.points > existing.points) {
+      bestByUserGame.set(key, score);
+    }
+  });
+
+  const totalsByUser = new Map();
+  bestByUserGame.forEach((score) => {
+    const total = totalsByUser.get(score.userId) || 0;
+    totalsByUser.set(score.userId, total + score.points);
+  });
+
+  const top = Array.from(totalsByUser.entries())
+    .map(([userId, totalPoints]) => {
+      const user = db.users.find((u) => u.id === userId);
+      return {
+        userId,
+        displayName: user?.displayName || "Unknown",
+        totalPoints,
+      };
+    })
+    .sort((a, b) => b.totalPoints - a.totalPoints)
+    .slice(0, 20);
+
+  return res.json({ top });
+});
+
 export default router;

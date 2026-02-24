@@ -2,9 +2,15 @@ import { api } from "./api.js";
 
 let authToken = "";
 let currentUser = null;
+let activeGameId = "click-rush";
 
 let clickRush = { active: false, score: 0, timer: null };
 let mathSprint = { active: false, score: 0, timer: null, secondsLeft: 30, answer: 0 };
+
+const gameConfig = {
+  "click-rush": { leaderboardId: "click-rush-leaderboard" },
+  "math-sprint": { leaderboardId: "math-sprint-leaderboard" },
+};
 
 function formDataToObject(form) {
   return Object.fromEntries(new FormData(form).entries());
@@ -41,6 +47,31 @@ function renderError(containerId, message) {
   errorNode.className = "output-error";
   errorNode.textContent = message;
   container.appendChild(errorNode);
+}
+
+function renderScoreList(containerId, entries, scoreField, emptyText) {
+  if (!Array.isArray(entries) || entries.length === 0) {
+    renderEmpty(containerId, emptyText);
+    return;
+  }
+
+  const container = document.getElementById(containerId);
+  clearNode(container);
+
+  entries.forEach((entry, index) => {
+    const item = document.createElement("article");
+    item.className = "output-item";
+
+    const title = document.createElement("h5");
+    title.textContent = `#${index + 1} ${entry.displayName}`;
+
+    const meta = document.createElement("p");
+    meta.className = "output-meta";
+    meta.textContent = `${entry[scoreField]} points`;
+
+    item.append(title, meta);
+    container.appendChild(item);
+  });
 }
 
 function renderGroups(groups) {
@@ -93,31 +124,6 @@ function renderMessages(messages) {
   });
 }
 
-function renderLeaderboard(board) {
-  if (!board?.top || board.top.length === 0) {
-    renderEmpty("leaderboard-output", "No scores yet for this game.");
-    return;
-  }
-
-  const container = document.getElementById("leaderboard-output");
-  clearNode(container);
-
-  board.top.forEach((entry, index) => {
-    const item = document.createElement("article");
-    item.className = "output-item";
-
-    const title = document.createElement("h5");
-    title.textContent = `#${index + 1} ${entry.displayName}`;
-
-    const meta = document.createElement("p");
-    meta.className = "output-meta";
-    meta.textContent = `${entry.points} points`;
-
-    item.append(title, meta);
-    container.appendChild(item);
-  });
-}
-
 function showGuest(panelId = "home-panel") {
   document.body.classList.remove("mode-app");
   document.body.classList.add("mode-guest");
@@ -142,11 +148,15 @@ function showApp(tab = "portal") {
   setText("welcome-title", welcome);
 
   document.querySelectorAll(".tab-chip").forEach((button) => {
-    const active = button.dataset.tab === tab;
-    button.classList.toggle("active", active);
+    button.classList.toggle("active", button.dataset.tab === tab);
   });
   document.getElementById("portal-tab").classList.toggle("hidden", tab !== "portal");
   document.getElementById("games-tab").classList.toggle("hidden", tab !== "games");
+
+  if (tab === "games") {
+    refreshTotalLeaderboard();
+    refreshGameLeaderboard(activeGameId);
+  }
 }
 
 function setSession(token, user) {
@@ -168,8 +178,7 @@ function restoreSession() {
   const rawUser = sessionStorage.getItem("authUser");
   if (!token || !rawUser) return false;
   try {
-    const user = JSON.parse(rawUser);
-    setSession(token, user);
+    setSession(token, JSON.parse(rawUser));
     return true;
   } catch {
     return false;
@@ -188,22 +197,75 @@ function nextMathQuestion() {
   setText("math-question", `${a} ${operator} ${b}`);
 }
 
+async function saveGameScore(gameId, points) {
+  if (!authToken) return;
+  try {
+    await api.submitScore({ gameId, points }, authToken);
+    await Promise.all([refreshGameLeaderboard(gameId), refreshTotalLeaderboard()]);
+  } catch (error) {
+    const statusId = gameId === "click-rush" ? "click-rush-status" : "math-status";
+    setText(statusId, userFacingError(error));
+  }
+}
+
+async function refreshGameLeaderboard(gameId) {
+  const leaderboardId = gameConfig[gameId]?.leaderboardId;
+  if (!leaderboardId) return;
+
+  try {
+    const board = await api.leaderboard(gameId);
+    renderScoreList(leaderboardId, board.top, "points", "No scores yet for this game.");
+  } catch (error) {
+    renderError(leaderboardId, userFacingError(error));
+  }
+}
+
+async function refreshTotalLeaderboard() {
+  try {
+    const data = await api.totalLeaderboard();
+    renderScoreList(
+      "total-leaderboard-output",
+      data.top,
+      "totalPoints",
+      "No scores yet across games."
+    );
+  } catch (error) {
+    renderError("total-leaderboard-output", userFacingError(error));
+  }
+}
+
+function switchGame(gameId) {
+  activeGameId = gameId;
+
+  document.querySelectorAll(".game-select").forEach((button) => {
+    button.classList.toggle("active", button.dataset.game === gameId);
+  });
+
+  document.querySelectorAll(".game-panel").forEach((panel) => {
+    panel.classList.toggle("hidden", panel.dataset.gamePanel !== gameId);
+  });
+
+  refreshGameLeaderboard(gameId);
+}
+
 function endClickRush() {
   clickRush.active = false;
   clearTimeout(clickRush.timer);
   document.getElementById("click-rush-board").classList.add("hidden");
-  setText("click-rush-status", `Finished: ${clickRush.score} points. Game ID: click-rush`);
-  document.querySelector("#submit-score-form [name='gameId']").value = "click-rush";
-  document.querySelector("#submit-score-form [name='points']").value = String(clickRush.score);
+  setText("click-rush-status", `Finished: ${clickRush.score} points. Saving...`);
+  void saveGameScore("click-rush", clickRush.score).then(() => {
+    setText("click-rush-status", `Finished: ${clickRush.score} points.`);
+  });
 }
 
 function endMathSprint() {
   mathSprint.active = false;
   clearInterval(mathSprint.timer);
   document.getElementById("math-board").classList.add("hidden");
-  setText("math-status", `Finished: ${mathSprint.score} points. Game ID: math-sprint`);
-  document.querySelector("#submit-score-form [name='gameId']").value = "math-sprint";
-  document.querySelector("#submit-score-form [name='points']").value = String(mathSprint.score);
+  setText("math-status", `Finished: ${mathSprint.score} points. Saving...`);
+  void saveGameScore("math-sprint", mathSprint.score).then(() => {
+    setText("math-status", `Finished: ${mathSprint.score} points.`);
+  });
 }
 
 function setupEvents() {
@@ -243,7 +305,6 @@ function setupEvents() {
       const payload = formDataToObject(event.target);
       const result = await api.login(payload);
       setSession(result.token, result.user);
-      setText("login-result", "Signed in");
       showApp("portal");
     } catch (error) {
       setText("login-result", userFacingError(error));
@@ -259,13 +320,16 @@ function setupEvents() {
     button.addEventListener("click", () => showApp(button.dataset.tab));
   });
 
+  document.querySelectorAll(".game-select").forEach((button) => {
+    button.addEventListener("click", () => switchGame(button.dataset.game));
+  });
+
   document.getElementById("group-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     try {
       const payload = formDataToObject(event.target);
       await api.createGroup(payload, authToken);
-      const groups = await api.listGroups(authToken);
-      renderGroups(groups);
+      renderGroups(await api.listGroups(authToken));
       event.target.reset();
     } catch (error) {
       renderError("groups-output", userFacingError(error));
@@ -274,8 +338,7 @@ function setupEvents() {
 
   document.getElementById("refresh-groups").addEventListener("click", async () => {
     try {
-      const groups = await api.listGroups(authToken);
-      renderGroups(groups);
+      renderGroups(await api.listGroups(authToken));
     } catch (error) {
       renderError("groups-output", userFacingError(error));
     }
@@ -286,8 +349,7 @@ function setupEvents() {
     try {
       const payload = formDataToObject(event.target);
       await api.sendMessage(payload.groupId, { text: payload.text }, authToken);
-      const messages = await api.listMessages(payload.groupId, authToken);
-      renderMessages(messages);
+      renderMessages(await api.listMessages(payload.groupId, authToken));
       event.target.reset();
     } catch (error) {
       renderError("messages-output", userFacingError(error));
@@ -301,8 +363,7 @@ function setupEvents() {
       return;
     }
     try {
-      const messages = await api.listMessages(groupId, authToken);
-      renderMessages(messages);
+      renderMessages(await api.listMessages(groupId, authToken));
     } catch (error) {
       renderError("messages-output", userFacingError(error));
     }
@@ -318,10 +379,8 @@ function setupEvents() {
     target.onclick = () => {
       if (!clickRush.active) return;
       clickRush.score += 1;
-      const x = randomInt(5, 85);
-      const y = randomInt(8, 75);
-      target.style.left = `${x}%`;
-      target.style.top = `${y}%`;
+      target.style.left = `${randomInt(5, 85)}%`;
+      target.style.top = `${randomInt(8, 75)}%`;
       setText("click-rush-status", `Score: ${clickRush.score}`);
     };
 
@@ -348,6 +407,7 @@ function setupEvents() {
   document.getElementById("math-answer-form").addEventListener("submit", (event) => {
     event.preventDefault();
     if (!mathSprint.active) return;
+
     const input = document.getElementById("math-answer");
     const guess = Number(input.value);
     if (guess === mathSprint.answer) {
@@ -357,31 +417,9 @@ function setupEvents() {
     } else {
       setText("math-status", `Try again. Score: ${mathSprint.score}`);
     }
+
     input.value = "";
     input.focus();
-  });
-
-  document.getElementById("submit-score-form").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    try {
-      const payload = formDataToObject(event.target);
-      payload.points = Number(payload.points);
-      await api.submitScore(payload, authToken);
-      setText("score-submit-status", `Saved ${payload.points} for ${payload.gameId}`);
-    } catch (error) {
-      setText("score-submit-status", userFacingError(error));
-    }
-  });
-
-  document.getElementById("leaderboard-form").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    try {
-      const payload = formDataToObject(event.target);
-      const board = await api.leaderboard(payload.gameId);
-      renderLeaderboard(board);
-    } catch (error) {
-      renderError("leaderboard-output", userFacingError(error));
-    }
   });
 }
 
@@ -391,3 +429,5 @@ if (restoreSession()) {
 } else {
   showGuest("home-panel");
 }
+
+switchGame("click-rush");

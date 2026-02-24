@@ -53,4 +53,5 @@ export const api = {
     }),
 
   leaderboard: (gameId) => request(`/api/games/leaderboard/${encodeURIComponent(gameId)}`),
+  totalLeaderboard: () => request("/api/games/leaderboard-total"),
 };

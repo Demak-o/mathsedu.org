@@ -190,6 +190,22 @@ input:-webkit-autofill:focus {
   gap: 0.5rem;
 }
 
+.game-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.game-select {
+  text-align: left;
+  font-weight: 700;
+}
+
+.game-select.active {
+  border-color: #ff5cff;
+  box-shadow: 0 0 10px #ff5cff55;
+  background: linear-gradient(180deg, #f160ff 0%, #a73bff 100%);
+}
+
 .output-card {
   border-radius: 12px;
   border: 1px solid #a548ff7a;
