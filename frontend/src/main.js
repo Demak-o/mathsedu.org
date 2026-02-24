@@ -15,6 +15,13 @@ function setText(id, text) {
   document.getElementById(id).textContent = text;
 }
 
+function userFacingError(error) {
+  if (error instanceof TypeError && error.message === "Failed to fetch") {
+    return "Cannot reach backend right now. Wait for Render deploy, then try again.";
+  }
+  return error.message;
+}
+
 document.getElementById("show-signup").addEventListener("click", () => show("signup-panel"));
 document.getElementById("show-signin").addEventListener("click", () => show("signin-panel"));
 document.getElementById("back-from-signup").addEventListener("click", () => show("home-panel"));
@@ -40,7 +47,7 @@ document.getElementById("signup-form").addEventListener("submit", async (event) 
     setText("signup-result", "Account created. You can now sign in.");
     event.target.reset();
   } catch (error) {
-    setText("signup-result", error.message);
+    setText("signup-result", userFacingError(error));
   }
 });
 
@@ -51,6 +58,6 @@ document.getElementById("login-form").addEventListener("submit", async (event) =
     const result = await api.login(payload);
     setText("login-result", `Signed in as ${result.user.displayName}`);
   } catch (error) {
-    setText("login-result", error.message);
+    setText("login-result", userFacingError(error));
   }
 });

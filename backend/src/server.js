@@ -8,7 +8,36 @@ import gameRoutes from "./routes/games.js";
 const app = express();
 const port = Number(process.env.PORT || 8787);
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
+const configuredOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+
+const defaultAllowedOrigins = [
+  "http://localhost:4173",
+  "http://localhost:5173",
+  "https://demak-o.github.io",
+];
+
+function isAllowedOrigin(origin) {
+  const allAllowed = [...defaultAllowedOrigins, ...configuredOrigins];
+  if (allAllowed.includes("*")) return true;
+  if (allAllowed.includes(origin)) return true;
+  // Allow GitHub Pages project URLs under the same account.
+  if (/^https:\/\/demak-o\.github\.io$/i.test(origin)) return true;
+  return false;
+}
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Non-browser clients may not send Origin.
+      if (!origin) return callback(null, true);
+      if (isAllowedOrigin(origin)) return callback(null, true);
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+  })
+);
 app.use(express.json());
 
 app.get("/health", (_req, res) => {
