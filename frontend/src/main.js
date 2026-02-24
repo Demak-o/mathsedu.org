@@ -14,15 +14,108 @@ function setText(id, text) {
   document.getElementById(id).textContent = text;
 }
 
-function setJson(id, value) {
-  document.getElementById(id).textContent = JSON.stringify(value, null, 2);
-}
-
 function userFacingError(error) {
   if (error instanceof TypeError && error.message === "Failed to fetch") {
     return "Cannot reach backend right now. Check Render deploy/CORS and try again.";
   }
   return error.message;
+}
+
+function clearNode(node) {
+  while (node.firstChild) node.removeChild(node.firstChild);
+}
+
+function renderEmpty(containerId, text) {
+  const container = document.getElementById(containerId);
+  clearNode(container);
+  const empty = document.createElement("p");
+  empty.className = "output-muted";
+  empty.textContent = text;
+  container.appendChild(empty);
+}
+
+function renderError(containerId, message) {
+  const container = document.getElementById(containerId);
+  clearNode(container);
+  const errorNode = document.createElement("p");
+  errorNode.className = "output-error";
+  errorNode.textContent = message;
+  container.appendChild(errorNode);
+}
+
+function renderGroups(groups) {
+  if (!Array.isArray(groups) || groups.length === 0) {
+    renderEmpty("groups-output", "No groups yet. Create your first one.");
+    return;
+  }
+
+  const container = document.getElementById("groups-output");
+  clearNode(container);
+
+  groups.forEach((group) => {
+    const item = document.createElement("article");
+    item.className = "output-item";
+
+    const title = document.createElement("h5");
+    title.textContent = group.name;
+
+    const meta = document.createElement("p");
+    meta.className = "output-meta";
+    meta.textContent = `Group ID: ${group.id}`;
+
+    item.append(title, meta);
+    container.appendChild(item);
+  });
+}
+
+function renderMessages(messages) {
+  if (!Array.isArray(messages) || messages.length === 0) {
+    renderEmpty("messages-output", "No messages in this group yet.");
+    return;
+  }
+
+  const container = document.getElementById("messages-output");
+  clearNode(container);
+
+  messages.forEach((message) => {
+    const item = document.createElement("article");
+    item.className = "output-item";
+
+    const body = document.createElement("p");
+    body.textContent = message.text;
+
+    const meta = document.createElement("p");
+    meta.className = "output-meta";
+    meta.textContent = `Sender: ${message.senderId}`;
+
+    item.append(body, meta);
+    container.appendChild(item);
+  });
+}
+
+function renderLeaderboard(board) {
+  if (!board?.top || board.top.length === 0) {
+    renderEmpty("leaderboard-output", "No scores yet for this game.");
+    return;
+  }
+
+  const container = document.getElementById("leaderboard-output");
+  clearNode(container);
+
+  board.top.forEach((entry, index) => {
+    const item = document.createElement("article");
+    item.className = "output-item";
+
+    const title = document.createElement("h5");
+    title.textContent = `#${index + 1} ${entry.displayName}`;
+
+    const meta = document.createElement("p");
+    meta.className = "output-meta";
+    meta.textContent = `${entry.points} points`;
+
+    item.append(title, meta);
+    container.appendChild(item);
+  });
 }
 
 function showGuest(panelId = "home-panel") {
@@ -48,7 +141,7 @@ function showApp(tab = "portal") {
   const welcome = currentUser ? `Welcome, ${currentUser.displayName}` : "Welcome";
   setText("welcome-title", welcome);
 
-  document.querySelectorAll(".tab-btn").forEach((button) => {
+  document.querySelectorAll(".tab-chip").forEach((button) => {
     const active = button.dataset.tab === tab;
     button.classList.toggle("active", active);
   });
@@ -162,7 +255,7 @@ function setupEvents() {
     showGuest("home-panel");
   });
 
-  document.querySelectorAll(".tab-btn").forEach((button) => {
+  document.querySelectorAll(".tab-chip").forEach((button) => {
     button.addEventListener("click", () => showApp(button.dataset.tab));
   });
 
@@ -170,20 +263,21 @@ function setupEvents() {
     event.preventDefault();
     try {
       const payload = formDataToObject(event.target);
-      const group = await api.createGroup(payload, authToken);
-      setJson("groups-output", group);
+      await api.createGroup(payload, authToken);
+      const groups = await api.listGroups(authToken);
+      renderGroups(groups);
       event.target.reset();
     } catch (error) {
-      setJson("groups-output", { error: userFacingError(error) });
+      renderError("groups-output", userFacingError(error));
     }
   });
 
   document.getElementById("refresh-groups").addEventListener("click", async () => {
     try {
       const groups = await api.listGroups(authToken);
-      setJson("groups-output", groups);
+      renderGroups(groups);
     } catch (error) {
-      setJson("groups-output", { error: userFacingError(error) });
+      renderError("groups-output", userFacingError(error));
     }
   });
 
@@ -191,25 +285,26 @@ function setupEvents() {
     event.preventDefault();
     try {
       const payload = formDataToObject(event.target);
-      const message = await api.sendMessage(payload.groupId, { text: payload.text }, authToken);
-      setJson("messages-output", message);
+      await api.sendMessage(payload.groupId, { text: payload.text }, authToken);
+      const messages = await api.listMessages(payload.groupId, authToken);
+      renderMessages(messages);
       event.target.reset();
     } catch (error) {
-      setJson("messages-output", { error: userFacingError(error) });
+      renderError("messages-output", userFacingError(error));
     }
   });
 
   document.getElementById("load-messages").addEventListener("click", async () => {
     const groupId = document.querySelector("#message-form [name='groupId']").value.trim();
     if (!groupId) {
-      setJson("messages-output", { error: "Enter Group ID first" });
+      renderError("messages-output", "Enter Group ID first");
       return;
     }
     try {
       const messages = await api.listMessages(groupId, authToken);
-      setJson("messages-output", messages);
+      renderMessages(messages);
     } catch (error) {
-      setJson("messages-output", { error: userFacingError(error) });
+      renderError("messages-output", userFacingError(error));
     }
   });
 
@@ -283,9 +378,9 @@ function setupEvents() {
     try {
       const payload = formDataToObject(event.target);
       const board = await api.leaderboard(payload.gameId);
-      setJson("leaderboard-output", board);
+      renderLeaderboard(board);
     } catch (error) {
-      setJson("leaderboard-output", { error: userFacingError(error) });
+      renderError("leaderboard-output", userFacingError(error));
     }
   });
 }

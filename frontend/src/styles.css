@@ -37,7 +37,7 @@ body.mode-app {
 }
 
 .app-shell {
-  width: min(1100px, 100%);
+  width: min(1120px, 100%);
   margin: 0 auto;
   display: grid;
   gap: 1rem;
@@ -106,6 +106,14 @@ input {
   background: #130720;
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f6f1ff;
+  box-shadow: 0 0 0 1000px #130720 inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 .btn {
   cursor: pointer;
   color: var(--text);
@@ -125,9 +133,35 @@ input {
   background: #1a0a2c;
 }
 
-.tab-btn.active {
+.app-topbar {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-tabs {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.35rem;
+  border-radius: 14px;
+  border: 1px solid #c346ff66;
+  background: #11091b;
+}
+
+.tab-chip {
+  min-width: 130px;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.78rem 1rem;
+  background: #1b0b2a;
+  border-color: #8d3be0;
+}
+
+.tab-chip.active {
   border-color: #ff5cff;
   box-shadow: 0 0 12px #ff5cff66;
+  background: linear-gradient(180deg, #f160ff 0%, #a73bff 100%);
 }
 
 .result {
@@ -151,15 +185,47 @@ input {
   gap: 0.8rem;
 }
 
-pre {
-  margin: 0.45rem 0 0;
-  padding: 0.7rem;
-  border-radius: 10px;
-  border: 1px solid #8f42e26b;
-  background: #120a1f;
-  color: #e9ddff;
-  overflow-x: auto;
+.data-column {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.output-card {
+  border-radius: 12px;
+  border: 1px solid #a548ff7a;
+  background: #0f0719;
+  padding: 0.75rem;
   min-height: 120px;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.output-item {
+  border-radius: 10px;
+  border: 1px solid #923af270;
+  background: #1a0b28;
+  padding: 0.6rem;
+}
+
+.output-item h5,
+.output-item p {
+  margin: 0;
+}
+
+.output-meta {
+  margin-top: 0.3rem;
+  font-size: 0.86rem;
+  color: #d9bcff;
+}
+
+.output-muted {
+  margin: 0;
+  color: #c9a4ff;
+}
+
+.output-error {
+  margin: 0;
+  color: #ff9adf;
 }
 
 .game-card {
@@ -176,11 +242,7 @@ pre {
   border-radius: 12px;
   border: 1px solid #d44eff99;
   background:
-    repeating-linear-gradient(
-      90deg,
-      #ffffff03 0 18px,
-      #00000000 18px 36px
-    ),
+    repeating-linear-gradient(90deg, #ffffff03 0 18px, #00000000 18px 36px),
     #0c0514;
 }
 
@@ -204,14 +266,22 @@ pre {
   color: #ff94ff;
 }
 
-.app-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .hidden {
   display: none;
+}
+
+@media (max-width: 900px) {
+  .app-topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .header-tabs {
+    width: 100%;
+  }
+
+  .tab-chip {
+    flex: 1;
+  }
 }
 
 @media (max-width: 740px) {

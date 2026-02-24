@@ -51,13 +51,14 @@
           <p class="eyebrow">Signed In</p>
           <h2 id="welcome-title">Welcome</h2>
         </div>
+
+        <nav class="header-tabs" aria-label="Main sections">
+          <button class="btn tab-chip active" data-tab="portal" type="button">Portal</button>
+          <button class="btn tab-chip" data-tab="games" type="button">Games</button>
+        </nav>
+
         <button class="btn ghost" id="logout-btn" type="button">Log out</button>
       </header>
-
-      <section class="panel nav-panel">
-        <button class="btn tab-btn active" data-tab="portal" type="button">Portal</button>
-        <button class="btn tab-btn" data-tab="games" type="button">Games</button>
-      </section>
 
       <section class="panel tab-content" id="portal-tab">
         <h3>Portal Groups</h3>
@@ -66,18 +67,22 @@
           <button class="btn primary" type="submit">Create</button>
         </form>
         <div class="split">
-          <div>
+          <div class="data-column">
             <button class="btn ghost" id="refresh-groups" type="button">Refresh groups</button>
-            <pre id="groups-output">[]</pre>
+            <div id="groups-output" class="output-card">
+              <p class="output-muted">No groups loaded yet.</p>
+            </div>
           </div>
-          <div>
+          <div class="data-column">
             <form id="message-form">
               <input name="groupId" placeholder="Group ID" required />
               <input name="text" placeholder="Message" required />
               <button class="btn primary" type="submit">Send message</button>
             </form>
             <button class="btn ghost" id="load-messages" type="button">Load group messages</button>
-            <pre id="messages-output">[]</pre>
+            <div id="messages-output" class="output-card">
+              <p class="output-muted">No messages loaded yet.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -128,7 +133,9 @@
               <input name="gameId" placeholder="Game ID" required />
               <button class="btn ghost" type="submit">Load</button>
             </form>
-            <pre id="leaderboard-output">{ "gameId": "", "top": [] }</pre>
+            <div id="leaderboard-output" class="output-card">
+              <p class="output-muted">Load a game leaderboard.</p>
+            </div>
           </div>
         </div>
       </section>
