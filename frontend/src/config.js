@@ -1,2 +1,2 @@
 // Change this to your Render/Cloudflare API URL when deployed.
-export const API_BASE = "http://localhost:8787";
+export const API_BASE = "https://mathsedu-org.onrender.com";
