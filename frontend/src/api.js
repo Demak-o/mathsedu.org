@@ -1,12 +1,13 @@
 import { API_BASE } from "./config.js";
 
 async function request(path, options = {}) {
+  const { headers: optionHeaders = {}, ...restOptions } = options;
   const response = await fetch(`${API_BASE}${path}`, {
     headers: {
       "Content-Type": "application/json",
-      ...(options.headers || {}),
+      ...optionHeaders,
     },
-    ...options,
+    ...restOptions,
   });
 
   const data = await response.json().catch(() => ({}));
