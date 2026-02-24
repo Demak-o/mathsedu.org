@@ -198,13 +198,17 @@ function nextMathQuestion() {
 }
 
 async function saveGameScore(gameId, points) {
-  if (!authToken) return;
+  if (!authToken) {
+    return false;
+  }
   try {
     await api.submitScore({ gameId, points }, authToken);
     await Promise.all([refreshGameLeaderboard(gameId), refreshTotalLeaderboard()]);
+    return true;
   } catch (error) {
     const statusId = gameId === "click-rush" ? "click-rush-status" : "math-status";
     setText(statusId, userFacingError(error));
+    return false;
   }
 }
 
@@ -253,8 +257,8 @@ function endClickRush() {
   clearTimeout(clickRush.timer);
   document.getElementById("click-rush-board").classList.add("hidden");
   setText("click-rush-status", `Finished: ${clickRush.score} points. Saving...`);
-  void saveGameScore("click-rush", clickRush.score).then(() => {
-    setText("click-rush-status", `Finished: ${clickRush.score} points.`);
+  void saveGameScore("click-rush", clickRush.score).then((saved) => {
+    if (saved) setText("click-rush-status", `Finished: ${clickRush.score} points. Saved.`);
   });
 }
 
@@ -263,8 +267,8 @@ function endMathSprint() {
   clearInterval(mathSprint.timer);
   document.getElementById("math-board").classList.add("hidden");
   setText("math-status", `Finished: ${mathSprint.score} points. Saving...`);
-  void saveGameScore("math-sprint", mathSprint.score).then(() => {
-    setText("math-status", `Finished: ${mathSprint.score} points.`);
+  void saveGameScore("math-sprint", mathSprint.score).then((saved) => {
+    if (saved) setText("math-status", `Finished: ${mathSprint.score} points. Saved.`);
   });
 }
 
