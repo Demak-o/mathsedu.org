@@ -25,24 +25,24 @@ export const api = {
   signup: (payload) => request("/api/auth/signup", { method: "POST", body: JSON.stringify(payload) }),
   login: (payload) => request("/api/auth/login", { method: "POST", body: JSON.stringify(payload) }),
 
-  createGroup: (payload, token) =>
-    request("/api/portal/groups", {
+  listConversations: (token) => request("/api/portal/conversations", { headers: authHeader(token) }),
+
+  createConversation: (payload, token) =>
+    request("/api/portal/conversations", {
       method: "POST",
       headers: authHeader(token),
       body: JSON.stringify(payload),
     }),
 
-  listGroups: (token) => request("/api/portal/groups", { headers: authHeader(token) }),
-
-  sendMessage: (groupId, payload, token) =>
-    request(`/api/portal/groups/${encodeURIComponent(groupId)}/messages`, {
+  sendMessage: (conversationId, payload, token) =>
+    request(`/api/portal/conversations/${encodeURIComponent(conversationId)}/messages`, {
       method: "POST",
       headers: authHeader(token),
       body: JSON.stringify(payload),
     }),
 
-  listMessages: (groupId, token) =>
-    request(`/api/portal/groups/${encodeURIComponent(groupId)}/messages`, {
+  listMessages: (conversationId, token) =>
+    request(`/api/portal/conversations/${encodeURIComponent(conversationId)}/messages`, {
       headers: authHeader(token),
     }),
 

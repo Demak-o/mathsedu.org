@@ -3,6 +3,7 @@ import { api } from "./api.js";
 let authToken = "";
 let currentUser = null;
 let activeGameId = "click-rush";
+let activeConversationId = "";
 
 let clickRush = { active: false, score: 0, timer: null };
 let mathSprint = { active: false, score: 0, timer: null, secondsLeft: 30, answer: 0 };
@@ -74,54 +75,74 @@ function renderScoreList(containerId, entries, scoreField, emptyText) {
   });
 }
 
-function renderGroups(groups) {
-  if (!Array.isArray(groups) || groups.length === 0) {
-    renderEmpty("groups-output", "No groups yet. Create your first one.");
+function renderConversationList(conversations) {
+  const container = document.getElementById("conversation-list");
+  clearNode(container);
+
+  if (!Array.isArray(conversations) || conversations.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "output-muted";
+    empty.textContent = "No chats yet.";
+    container.appendChild(empty);
     return;
   }
 
-  const container = document.getElementById("groups-output");
-  clearNode(container);
+  conversations.forEach((conversation) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `conversation-item ${conversation.id === activeConversationId ? "active" : ""}`;
+    button.dataset.conversationId = conversation.id;
 
-  groups.forEach((group) => {
-    const item = document.createElement("article");
-    item.className = "output-item";
+    const name = document.createElement("p");
+    name.className = "conversation-name";
+    name.textContent = conversation.name;
 
-    const title = document.createElement("h5");
-    title.textContent = group.name;
+    const preview = document.createElement("p");
+    preview.className = "conversation-preview";
+    preview.textContent = conversation.lastMessage?.text || (conversation.type === "direct" ? "Direct message" : "Group chat");
 
-    const meta = document.createElement("p");
-    meta.className = "output-meta";
-    meta.textContent = `Group ID: ${group.id}`;
+    button.append(name, preview);
+    button.addEventListener("click", () => openConversation(conversation.id, conversation.name));
 
-    item.append(title, meta);
-    container.appendChild(item);
+    container.appendChild(button);
   });
 }
 
-function renderMessages(messages) {
+function renderChatThread(messages) {
+  const thread = document.getElementById("chat-thread");
+  clearNode(thread);
+
   if (!Array.isArray(messages) || messages.length === 0) {
-    renderEmpty("messages-output", "No messages in this group yet.");
+    const empty = document.createElement("p");
+    empty.className = "output-muted";
+    empty.textContent = "No messages yet. Say hello.";
+    thread.appendChild(empty);
     return;
   }
 
-  const container = document.getElementById("messages-output");
-  clearNode(container);
-
   messages.forEach((message) => {
-    const item = document.createElement("article");
-    item.className = "output-item";
+    const mine = message.senderId === currentUser?.id;
 
-    const body = document.createElement("p");
-    body.textContent = message.text;
+    const wrap = document.createElement("article");
+    wrap.className = `chat-bubble-wrap ${mine ? "mine" : "other"}`;
 
-    const meta = document.createElement("p");
-    meta.className = "output-meta";
-    meta.textContent = `Sender: ${message.senderId}`;
+    const bubble = document.createElement("div");
+    bubble.className = `chat-bubble ${mine ? "mine" : "other"}`;
 
-    item.append(body, meta);
-    container.appendChild(item);
+    const sender = document.createElement("p");
+    sender.className = "chat-sender";
+    sender.textContent = message.senderDisplayName || "Unknown";
+
+    const text = document.createElement("p");
+    text.className = "chat-text";
+    text.textContent = message.text;
+
+    bubble.append(sender, text);
+    wrap.appendChild(bubble);
+    thread.appendChild(wrap);
   });
+
+  thread.scrollTop = thread.scrollHeight;
 }
 
 function showGuest(panelId = "home-panel") {
@@ -157,6 +178,10 @@ function showApp(tab = "portal") {
     refreshTotalLeaderboard();
     refreshGameLeaderboard(activeGameId);
   }
+
+  if (tab === "portal") {
+    refreshConversations();
+  }
 }
 
 function setSession(token, user) {
@@ -169,6 +194,7 @@ function setSession(token, user) {
 function clearSession() {
   authToken = "";
   currentUser = null;
+  activeConversationId = "";
   sessionStorage.removeItem("authToken");
   sessionStorage.removeItem("authUser");
 }
@@ -197,10 +223,36 @@ function nextMathQuestion() {
   setText("math-question", `${a} ${operator} ${b}`);
 }
 
-async function saveGameScore(gameId, points) {
-  if (!authToken) {
-    return false;
+async function refreshConversations() {
+  try {
+    const conversations = await api.listConversations(authToken);
+    renderConversationList(conversations);
+
+    if (!activeConversationId && conversations.length > 0) {
+      await openConversation(conversations[0].id, conversations[0].name);
+    }
+  } catch (error) {
+    renderError("conversation-list", userFacingError(error));
   }
+}
+
+async function openConversation(conversationId, name) {
+  activeConversationId = conversationId;
+  setText("active-chat-title", name || "Chat");
+  document.getElementById("send-message-form").classList.remove("hidden");
+
+  try {
+    const messages = await api.listMessages(conversationId, authToken);
+    renderChatThread(messages);
+    const conversations = await api.listConversations(authToken);
+    renderConversationList(conversations);
+  } catch (error) {
+    renderError("chat-thread", userFacingError(error));
+  }
+}
+
+async function saveGameScore(gameId, points) {
+  if (!authToken) return false;
   try {
     await api.submitScore({ gameId, points }, authToken);
     await Promise.all([refreshGameLeaderboard(gameId), refreshTotalLeaderboard()]);
@@ -227,12 +279,7 @@ async function refreshGameLeaderboard(gameId) {
 async function refreshTotalLeaderboard() {
   try {
     const data = await api.totalLeaderboard();
-    renderScoreList(
-      "total-leaderboard-output",
-      data.top,
-      "totalPoints",
-      "No scores yet across games."
-    );
+    renderScoreList("total-leaderboard-output", data.top, "totalPoints", "No scores yet across games.");
   } catch (error) {
     renderError("total-leaderboard-output", userFacingError(error));
   }
@@ -324,53 +371,63 @@ function setupEvents() {
     button.addEventListener("click", () => showApp(button.dataset.tab));
   });
 
+  document.getElementById("new-chat-btn").addEventListener("click", () => {
+    document.getElementById("new-chat-form").classList.toggle("hidden");
+  });
+
+  document.getElementById("chat-type").addEventListener("change", (event) => {
+    const direct = event.target.value === "direct";
+    document.getElementById("chat-name").classList.toggle("hidden", direct);
+    document.getElementById("chat-member-emails").classList.toggle("hidden", direct);
+    document.getElementById("chat-target-email").classList.toggle("hidden", !direct);
+  });
+  document.getElementById("chat-type").dispatchEvent(new Event("change"));
+
+  document.getElementById("new-chat-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const type = document.getElementById("chat-type").value;
+    const name = document.getElementById("chat-name").value.trim();
+    const targetEmail = document.getElementById("chat-target-email").value.trim();
+    const memberEmails = document
+      .getElementById("chat-member-emails")
+      .value
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
+
+    try {
+      const conversation = await api.createConversation({ type, name, targetEmail, memberEmails }, authToken);
+      document.getElementById("new-chat-form").reset();
+      document.getElementById("new-chat-form").classList.add("hidden");
+      await refreshConversations();
+      await openConversation(conversation.id, conversation.name);
+    } catch (error) {
+      alert(userFacingError(error));
+    }
+  });
+
+  document.getElementById("send-message-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!activeConversationId) return;
+
+    const input = document.getElementById("chat-message-input");
+    const text = input.value.trim();
+    if (!text) return;
+
+    try {
+      await api.sendMessage(activeConversationId, { text }, authToken);
+      input.value = "";
+      const messages = await api.listMessages(activeConversationId, authToken);
+      renderChatThread(messages);
+      await refreshConversations();
+    } catch (error) {
+      alert(userFacingError(error));
+    }
+  });
+
   document.querySelectorAll(".game-select").forEach((button) => {
     button.addEventListener("click", () => switchGame(button.dataset.game));
-  });
-
-  document.getElementById("group-form").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    try {
-      const payload = formDataToObject(event.target);
-      await api.createGroup(payload, authToken);
-      renderGroups(await api.listGroups(authToken));
-      event.target.reset();
-    } catch (error) {
-      renderError("groups-output", userFacingError(error));
-    }
-  });
-
-  document.getElementById("refresh-groups").addEventListener("click", async () => {
-    try {
-      renderGroups(await api.listGroups(authToken));
-    } catch (error) {
-      renderError("groups-output", userFacingError(error));
-    }
-  });
-
-  document.getElementById("message-form").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    try {
-      const payload = formDataToObject(event.target);
-      await api.sendMessage(payload.groupId, { text: payload.text }, authToken);
-      renderMessages(await api.listMessages(payload.groupId, authToken));
-      event.target.reset();
-    } catch (error) {
-      renderError("messages-output", userFacingError(error));
-    }
-  });
-
-  document.getElementById("load-messages").addEventListener("click", async () => {
-    const groupId = document.querySelector("#message-form [name='groupId']").value.trim();
-    if (!groupId) {
-      renderError("messages-output", "Enter Group ID first");
-      return;
-    }
-    try {
-      renderMessages(await api.listMessages(groupId, authToken));
-    } catch (error) {
-      renderError("messages-output", userFacingError(error));
-    }
   });
 
   document.getElementById("start-click-rush").addEventListener("click", () => {

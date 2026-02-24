@@ -61,29 +61,41 @@
       </header>
 
       <section class="panel tab-content" id="portal-tab">
-        <h3>Portal Groups</h3>
-        <form id="group-form" class="inline-form">
-          <input name="name" placeholder="Create group name" required />
-          <button class="btn primary" type="submit">Create</button>
-        </form>
-        <div class="split">
-          <div class="data-column">
-            <button class="btn ghost" id="refresh-groups" type="button">Refresh groups</button>
-            <div id="groups-output" class="output-card">
-              <p class="output-muted">No groups loaded yet.</p>
+        <div class="chat-layout">
+          <aside class="chat-sidebar">
+            <div class="chat-sidebar-head">
+              <h3>Messages</h3>
+              <button class="btn primary" id="new-chat-btn" type="button">New Message</button>
             </div>
-          </div>
-          <div class="data-column">
-            <form id="message-form">
-              <input name="groupId" placeholder="Group ID" required />
-              <input name="text" placeholder="Message" required />
-              <button class="btn primary" type="submit">Send message</button>
+
+            <form id="new-chat-form" class="hidden">
+              <select id="chat-type" required>
+                <option value="direct">Direct message</option>
+                <option value="group">Group chat</option>
+              </select>
+              <input id="chat-name" placeholder="Group name (for group chats)" />
+              <input id="chat-target-email" placeholder="Direct message email" />
+              <input id="chat-member-emails" placeholder="Group member emails (comma separated)" />
+              <button class="btn ghost" type="submit">Create</button>
             </form>
-            <button class="btn ghost" id="load-messages" type="button">Load group messages</button>
-            <div id="messages-output" class="output-card">
-              <p class="output-muted">No messages loaded yet.</p>
+
+            <div id="conversation-list" class="output-card">
+              <p class="output-muted">No chats yet.</p>
             </div>
-          </div>
+          </aside>
+
+          <section class="chat-main">
+            <div class="chat-main-head">
+              <h3 id="active-chat-title">Select a chat</h3>
+            </div>
+            <div id="chat-thread" class="chat-thread">
+              <p class="output-muted">Choose a chat from the left.</p>
+            </div>
+            <form id="send-message-form" class="chat-compose hidden">
+              <input id="chat-message-input" placeholder="Type your message..." required />
+              <button class="btn primary" type="submit">Send</button>
+            </form>
+          </section>
         </div>
       </section>
 

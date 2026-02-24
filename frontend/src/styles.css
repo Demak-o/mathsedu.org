@@ -88,6 +88,7 @@ form {
 }
 
 input,
+.chat-sidebar select,
 .btn {
   border-radius: 10px;
   border: 1px solid #8542db;
@@ -104,6 +105,12 @@ input {
 .mode-app input {
   border-color: #c346ff;
   background: #130720;
+}
+
+.chat-sidebar select {
+  width: 100%;
+  background: #130720;
+  color: var(--text);
 }
 
 input:-webkit-autofill,
@@ -188,6 +195,119 @@ input:-webkit-autofill:focus {
 .data-column {
   display: grid;
   gap: 0.5rem;
+}
+
+.chat-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1rem;
+}
+
+.chat-sidebar {
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+}
+
+.chat-sidebar-head,
+.chat-main-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-main {
+  border-radius: 12px;
+  border: 1px solid #a548ff7a;
+  background: #0f0719;
+  padding: 0.8rem;
+  min-height: 520px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.8rem;
+}
+
+.conversation-item {
+  width: 100%;
+  text-align: left;
+  border-radius: 10px;
+  border: 1px solid #923af270;
+  background: #1a0b28;
+  color: var(--text);
+  padding: 0.6rem;
+  cursor: pointer;
+}
+
+.conversation-item.active {
+  border-color: #ff5cff;
+  box-shadow: 0 0 10px #ff5cff50;
+}
+
+.conversation-name {
+  margin: 0;
+  font-weight: 700;
+}
+
+.conversation-preview {
+  margin: 0.3rem 0 0;
+  color: #d9bcff;
+  font-size: 0.86rem;
+}
+
+.chat-thread {
+  border-radius: 12px;
+  border: 1px solid #6f2db466;
+  background: #11071b;
+  padding: 0.8rem;
+  overflow-y: auto;
+  max-height: 56vh;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.chat-bubble-wrap {
+  display: flex;
+}
+
+.chat-bubble-wrap.mine {
+  justify-content: flex-end;
+}
+
+.chat-bubble-wrap.other {
+  justify-content: flex-start;
+}
+
+.chat-bubble {
+  max-width: 74%;
+  padding: 0.55rem 0.65rem;
+  border-radius: 11px;
+}
+
+.chat-bubble.mine {
+  background: linear-gradient(180deg, #f160ff 0%, #a73bff 100%);
+  color: #fff;
+}
+
+.chat-bubble.other {
+  background: #2a123f;
+  border: 1px solid #8e3ae0;
+}
+
+.chat-sender {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.92;
+}
+
+.chat-text {
+  margin: 0.2rem 0 0;
+  white-space: pre-wrap;
+}
+
+.chat-compose {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.6rem;
 }
 
 .game-list {
@@ -297,6 +417,10 @@ input:-webkit-autofill:focus {
 
   .tab-chip {
     flex: 1;
+  }
+
+  .chat-layout {
+    grid-template-columns: 1fr;
   }
 }
 
