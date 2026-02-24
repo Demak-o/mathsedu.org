@@ -16,7 +16,41 @@ async function request(path, options = {}) {
   return data;
 }
 
+function authHeader(token) {
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export const api = {
   signup: (payload) => request("/api/auth/signup", { method: "POST", body: JSON.stringify(payload) }),
   login: (payload) => request("/api/auth/login", { method: "POST", body: JSON.stringify(payload) }),
+
+  createGroup: (payload, token) =>
+    request("/api/portal/groups", {
+      method: "POST",
+      headers: authHeader(token),
+      body: JSON.stringify(payload),
+    }),
+
+  listGroups: (token) => request("/api/portal/groups", { headers: authHeader(token) }),
+
+  sendMessage: (groupId, payload, token) =>
+    request(`/api/portal/groups/${encodeURIComponent(groupId)}/messages`, {
+      method: "POST",
+      headers: authHeader(token),
+      body: JSON.stringify(payload),
+    }),
+
+  listMessages: (groupId, token) =>
+    request(`/api/portal/groups/${encodeURIComponent(groupId)}/messages`, {
+      headers: authHeader(token),
+    }),
+
+  submitScore: (payload, token) =>
+    request("/api/games/scores", {
+      method: "POST",
+      headers: authHeader(token),
+      body: JSON.stringify(payload),
+    }),
+
+  leaderboard: (gameId) => request(`/api/games/leaderboard/${encodeURIComponent(gameId)}`),
 };

@@ -6,9 +6,9 @@
     <title>mathsedu.org</title>
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
-  <body>
-    <main class="shell">
-      <section class="home" id="home-panel">
+  <body class="mode-guest">
+    <main class="shell" id="guest-shell">
+      <section class="home panel" id="home-panel">
         <p class="eyebrow">Private Friends Network</p>
         <h1>mathsedu.org</h1>
         <p class="subtitle">A secure home base for your friend group.</p>
@@ -42,6 +42,95 @@
         </form>
         <p id="login-result" class="result"></p>
         <button id="back-from-signin" class="link-btn" type="button">Back</button>
+      </section>
+    </main>
+
+    <main class="app-shell hidden" id="app-shell">
+      <header class="app-topbar panel">
+        <div>
+          <p class="eyebrow">Signed In</p>
+          <h2 id="welcome-title">Welcome</h2>
+        </div>
+        <button class="btn ghost" id="logout-btn" type="button">Log out</button>
+      </header>
+
+      <section class="panel nav-panel">
+        <button class="btn tab-btn active" data-tab="portal" type="button">Portal</button>
+        <button class="btn tab-btn" data-tab="games" type="button">Games</button>
+      </section>
+
+      <section class="panel tab-content" id="portal-tab">
+        <h3>Portal Groups</h3>
+        <form id="group-form" class="inline-form">
+          <input name="name" placeholder="Create group name" required />
+          <button class="btn primary" type="submit">Create</button>
+        </form>
+        <div class="split">
+          <div>
+            <button class="btn ghost" id="refresh-groups" type="button">Refresh groups</button>
+            <pre id="groups-output">[]</pre>
+          </div>
+          <div>
+            <form id="message-form">
+              <input name="groupId" placeholder="Group ID" required />
+              <input name="text" placeholder="Message" required />
+              <button class="btn primary" type="submit">Send message</button>
+            </form>
+            <button class="btn ghost" id="load-messages" type="button">Load group messages</button>
+            <pre id="messages-output">[]</pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel tab-content hidden" id="games-tab">
+        <h3>Games Arcade</h3>
+        <p class="subtitle">Play, submit scores, and challenge your friends.</p>
+
+        <div class="split">
+          <article class="game-card">
+            <h4>Neon Click Rush</h4>
+            <p>Click the orb as many times as you can in 15 seconds.</p>
+            <button class="btn primary" id="start-click-rush" type="button">Start</button>
+            <p id="click-rush-status" class="result">Press start.</p>
+            <div id="click-rush-board" class="board hidden">
+              <button id="click-target" type="button">●</button>
+            </div>
+          </article>
+
+          <article class="game-card">
+            <h4>Math Sprint</h4>
+            <p>Solve as many equations as possible in 30 seconds.</p>
+            <button class="btn primary" id="start-math-sprint" type="button">Start</button>
+            <p id="math-status" class="result">Press start.</p>
+            <div id="math-board" class="hidden">
+              <p id="math-question" class="math-question">0 + 0</p>
+              <form id="math-answer-form" class="inline-form">
+                <input id="math-answer" placeholder="Answer" required />
+                <button class="btn ghost" type="submit">Submit</button>
+              </form>
+            </div>
+          </article>
+        </div>
+
+        <div class="split">
+          <div>
+            <h4>Submit score</h4>
+            <form id="submit-score-form">
+              <input name="gameId" placeholder="Game ID" required />
+              <input name="points" type="number" min="0" placeholder="Points" required />
+              <button class="btn primary" type="submit">Submit</button>
+            </form>
+            <p id="score-submit-status" class="result"></p>
+          </div>
+          <div>
+            <h4>Leaderboard</h4>
+            <form id="leaderboard-form" class="inline-form">
+              <input name="gameId" placeholder="Game ID" required />
+              <button class="btn ghost" type="submit">Load</button>
+            </form>
+            <pre id="leaderboard-output">{ "gameId": "", "top": [] }</pre>
+          </div>
+        </div>
       </section>
     </main>
 
