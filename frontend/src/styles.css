@@ -1,0 +1,91 @@
+:root {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --accent: #3fb950;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --error: #ff7b72;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: radial-gradient(circle at 20% 0%, #182130 0%, var(--bg) 35%);
+  color: var(--text);
+}
+
+.app-shell {
+  width: min(1200px, 92vw);
+  margin: 2rem auto;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 2.4rem;
+}
+
+.hero p {
+  color: var(--muted);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.card {
+  background: var(--panel);
+  padding: 1rem;
+  border: 1px solid #273142;
+  border-radius: 12px;
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+input,
+button {
+  width: 100%;
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #2b3446;
+  background: #0e1520;
+  color: var(--text);
+}
+
+button {
+  background: #12223b;
+  border-color: #204d7a;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+.result {
+  color: var(--muted);
+  min-height: 1.2rem;
+}
+
+pre {
+  overflow-x: auto;
+  background: #0b0f15;
+  border: 1px solid #273142;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+}
