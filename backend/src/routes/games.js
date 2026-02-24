@@ -11,10 +11,12 @@ router.post("/scores", requireAuth, (req, res) => {
     return res.status(400).json({ error: "gameId and numeric points are required" });
   }
 
+  const user = db.users.find((u) => u.id === req.auth.sub);
   const score = {
     id: uuidv4(),
     gameId,
     userId: req.auth.sub,
+    displayNameSnapshot: user?.displayName || req.auth.displayName || "Unknown",
     points: Number(points),
     createdAt: new Date().toISOString(),
   };
@@ -32,7 +34,7 @@ router.get("/leaderboard/:gameId", (req, res) => {
       const user = db.users.find((u) => u.id === s.userId);
       return {
         userId: s.userId,
-        displayName: user?.displayName || "Unknown",
+        displayName: user?.displayName || s.displayNameSnapshot || "Unknown",
         points: s.points,
         createdAt: s.createdAt,
       };
@@ -61,9 +63,10 @@ router.get("/leaderboard-total", (_req, res) => {
   const top = Array.from(totalsByUser.entries())
     .map(([userId, totalPoints]) => {
       const user = db.users.find((u) => u.id === userId);
+      const fallbackScore = Array.from(bestByUserGame.values()).find((s) => s.userId === userId);
       return {
         userId,
-        displayName: user?.displayName || "Unknown",
+        displayName: user?.displayName || fallbackScore?.displayNameSnapshot || "Unknown",
         totalPoints,
       };
     })
