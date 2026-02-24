@@ -1,10 +1,13 @@
 :root {
-  --bg: #0d1117;
-  --panel: #161b22;
-  --accent: #3fb950;
-  --text: #e6edf3;
-  --muted: #8b949e;
-  --error: #ff7b72;
+  --bg-top: #0e1420;
+  --bg-mid: #101a2f;
+  --bg-bottom: #0d1118;
+  --panel: #141f33;
+  --panel-border: #28466e;
+  --text: #ebf1f8;
+  --muted: #a2b8cf;
+  --primary: #2ca0ff;
+  --primary-strong: #1784e0;
 }
 
 * {
@@ -13,79 +16,102 @@
 
 body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: radial-gradient(circle at 20% 0%, #182130 0%, var(--bg) 35%);
+  min-height: 100vh;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
   color: var(--text);
+  background:
+    radial-gradient(1200px 500px at 90% -10%, #264a79 0%, transparent 55%),
+    radial-gradient(900px 600px at -20% 0%, #21335a 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 45%, var(--bg-bottom) 100%);
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
 }
 
-.app-shell {
-  width: min(1200px, 92vw);
-  margin: 2rem auto;
+.shell {
+  width: min(720px, 100%);
 }
 
-.hero h1 {
+.home,
+.panel {
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  padding: 1.25rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 35%);
+}
+
+.home h1 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(2rem, 6vw, 3rem);
+}
+
+.eyebrow {
   margin: 0;
-  font-size: 2.4rem;
-}
-
-.hero p {
   color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
 }
 
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+.subtitle {
+  color: var(--muted);
+  margin: 0.5rem 0 1rem;
 }
 
-.card {
-  background: var(--panel);
-  padding: 1rem;
-  border: 1px solid #273142;
-  border-radius: 12px;
+.actions {
+  display: flex;
+  gap: 0.7rem;
 }
 
-h2 {
-  margin-top: 0;
-  font-size: 1.1rem;
+.btn,
+input {
+  border-radius: 10px;
+  border: 1px solid #2c4d77;
+  padding: 0.72rem 0.85rem;
+  font-size: 0.95rem;
 }
 
-form {
-  display: grid;
-  gap: 0.5rem;
-}
-
-input,
-button {
+input {
   width: 100%;
-  border-radius: 8px;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid #2b3446;
-  background: #0e1520;
+  margin-bottom: 0.6rem;
+  background: #0d182b;
   color: var(--text);
 }
 
-button {
-  background: #12223b;
-  border-color: #204d7a;
+.btn {
   cursor: pointer;
 }
 
-button:hover {
-  border-color: var(--accent);
+.primary {
+  color: white;
+  border-color: var(--primary-strong);
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-strong) 100%);
+}
+
+.ghost {
+  color: var(--text);
+  background: #16233b;
+}
+
+.panel h2 {
+  margin-top: 0;
 }
 
 .result {
+  min-height: 1.3rem;
   color: var(--muted);
-  min-height: 1.2rem;
 }
 
-pre {
-  overflow-x: auto;
-  background: #0b0f15;
-  border: 1px solid #273142;
-  border-radius: 8px;
-  padding: 0.5rem;
-  font-size: 0.8rem;
+.link-btn {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  padding: 0;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
 }

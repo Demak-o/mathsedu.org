@@ -3,71 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mathsedu.org portal</title>
+    <title>mathsedu.org</title>
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
   <body>
-    <main class="app-shell">
-      <header class="hero">
+    <main class="shell">
+      <section class="home" id="home-panel">
+        <p class="eyebrow">Private Friends Network</p>
         <h1>mathsedu.org</h1>
-        <p>Friends portal: auth, group messages, and game scoring.</p>
-      </header>
-
-      <section class="card-grid">
-        <article class="card">
-          <h2>1) Sign up</h2>
-          <form id="signup-form">
-            <input name="displayName" placeholder="Display Name" required />
-            <input name="email" type="email" placeholder="Email" required />
-            <input name="phone" type="tel" placeholder="Phone (+1...)" required />
-            <input name="password" type="password" placeholder="Password" required />
-            <button type="submit">Create account</button>
-          </form>
-          <p id="signup-result" class="result"></p>
-        </article>
-
-        <article class="card">
-          <h2>2) Login</h2>
-          <form id="login-form">
-            <input name="email" type="email" placeholder="Email" required />
-            <input name="password" type="password" placeholder="Password" required />
-            <button type="submit">Login</button>
-          </form>
-          <p id="login-result" class="result"></p>
-        </article>
-
-        <article class="card">
-          <h2>3) Verify phone (OTP)</h2>
-          <form id="verify-form">
-            <input name="phone" type="tel" placeholder="Phone (+1...)" required />
-            <input name="code" placeholder="6 digit code" required />
-            <button type="submit">Verify</button>
-          </form>
-          <p id="verify-result" class="result"></p>
-        </article>
+        <p class="subtitle">A secure home base for your friend group.</p>
+        <div class="actions">
+          <button id="show-signup" class="btn primary" type="button">Sign up</button>
+          <button id="show-signin" class="btn ghost" type="button">Sign in</button>
+        </div>
       </section>
 
-      <section class="card-grid">
-        <article class="card">
-          <h2>Portal groups</h2>
-          <form id="group-form">
-            <input name="name" placeholder="Group name" required />
-            <button type="submit">Create group</button>
-          </form>
-          <button id="list-groups">Refresh groups</button>
-          <pre id="groups-output"></pre>
-        </article>
+      <section class="panel hidden" id="signup-panel">
+        <h2>Create account</h2>
+        <form id="signup-form">
+          <input name="displayName" placeholder="Display name" required />
+          <input name="realName" placeholder="Real name" required />
+          <input name="email" type="email" placeholder="Email" required />
+          <input name="phone" type="tel" placeholder="Phone (+1...)" required />
+          <input name="password" type="password" placeholder="Create password" required minlength="8" />
+          <input name="confirmPassword" type="password" placeholder="Retype password" required minlength="8" />
+          <button class="btn primary" type="submit">Create account</button>
+        </form>
+        <p id="signup-result" class="result"></p>
+        <button id="back-from-signup" class="link-btn" type="button">Back</button>
+      </section>
 
-        <article class="card">
-          <h2>Post score</h2>
-          <form id="score-form">
-            <input name="gameId" placeholder="Game ID" value="aim-trainer" required />
-            <input name="points" type="number" min="0" placeholder="Points" required />
-            <button type="submit">Submit score</button>
-          </form>
-          <button id="leaderboard-btn">Load leaderboard</button>
-          <pre id="leaderboard-output"></pre>
-        </article>
+      <section class="panel hidden" id="signin-panel">
+        <h2>Sign in</h2>
+        <form id="login-form">
+          <input name="email" type="email" placeholder="Email" required />
+          <input name="password" type="password" placeholder="Password" required />
+          <button class="btn primary" type="submit">Sign in</button>
+        </form>
+        <p id="login-result" class="result"></p>
+        <button id="back-from-signin" class="link-btn" type="button">Back</button>
       </section>
     </main>
 

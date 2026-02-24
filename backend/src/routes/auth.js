@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "../lib/store.js";
-import { sendVerificationCode } from "../services/smsProvider.js";
 
 const router = Router();
 
@@ -16,9 +15,9 @@ function createToken(user) {
 }
 
 router.post("/signup", async (req, res) => {
-  const { displayName, email, phone, password } = req.body;
-  if (!displayName || !email || !phone || !password) {
-    return res.status(400).json({ error: "displayName, email, phone and password are required" });
+  const { displayName, realName, email, phone, password } = req.body;
+  if (!displayName || !realName || !email || !phone || !password) {
+    return res.status(400).json({ error: "displayName, realName, email, phone and password are required" });
   }
 
   const exists = db.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
@@ -28,25 +27,22 @@ router.post("/signup", async (req, res) => {
   const user = {
     id: uuidv4(),
     displayName,
+    realName,
     email,
     phone,
     passwordHash,
-    phoneVerified: false,
     createdAt: new Date().toISOString(),
   };
   db.users.push(user);
 
-  const code = String(Math.floor(100000 + Math.random() * 900000));
-  db.otpCodes.push({
-    id: uuidv4(),
-    phone,
-    code,
-    expiresAt: Date.now() + 10 * 60 * 1000,
-  });
-  await sendVerificationCode(phone, code);
-
   return res.status(201).json({
-    user: { id: user.id, displayName: user.displayName, email: user.email, phone: user.phone, phoneVerified: false },
+    user: {
+      id: user.id,
+      displayName: user.displayName,
+      realName: user.realName,
+      email: user.email,
+      phone: user.phone,
+    },
   });
 });
 
@@ -66,32 +62,11 @@ router.post("/login", async (req, res) => {
     user: {
       id: user.id,
       displayName: user.displayName,
+      realName: user.realName,
       email: user.email,
       phone: user.phone,
-      phoneVerified: user.phoneVerified,
     },
   });
-});
-
-router.post("/verify-phone", (req, res) => {
-  const { phone, code } = req.body;
-  if (!phone || !code) return res.status(400).json({ error: "phone and code are required" });
-
-  const recordIndex = db.otpCodes.findIndex((otp) => otp.phone === phone && otp.code === code);
-  if (recordIndex === -1) return res.status(400).json({ error: "Invalid code" });
-
-  const record = db.otpCodes[recordIndex];
-  if (record.expiresAt < Date.now()) {
-    db.otpCodes.splice(recordIndex, 1);
-    return res.status(400).json({ error: "Code expired" });
-  }
-
-  const user = db.users.find((u) => u.phone === phone);
-  if (!user) return res.status(404).json({ error: "User not found for phone" });
-
-  user.phoneVerified = true;
-  db.otpCodes.splice(recordIndex, 1);
-  return res.json({ ok: true });
 });
 
 export default router;
